@@ -54,7 +54,8 @@ void BackgroundPrediction_Kinematic_CrystalBall(std::string filename,
   TFile *f_data=new TFile(filename.c_str());
   TH1F *h_mX_SR=(TH1F*)f_data->Get(hist.c_str());
   h_mX_SR->Rebin(rebin);
-  double nEventsSR=((TH1F*)f_data->Get("h_mX_SR_kinFit"))->GetSumOfWeights();
+  TH1F *h_tmp=(TH1F*)f_data->Get("h_mX_SR_kinFit");	
+  double nEventsSR= h_tmp->Integral(h_tmp->FindBin(fit_lo),h_tmp->FindBin(fit_hi));
   
   RooRealVar *x;
   x=new RooRealVar("x", "m_{X} (GeV)", plot_lo, plot_hi);
@@ -69,7 +70,7 @@ void BackgroundPrediction_Kinematic_CrystalBall(std::string filename,
   
   RooPlot *data_plot=x->frame();
   pred.plotOn(data_plot);
-  bg.plotOn(data_plot, RooFit::VisualizeError(*r_bg, 1), RooFit::FillColor(kGreen+1), RooFit::FillStyle(3001));
+  bg.plotOn(data_plot, RooFit::VisualizeError(*r_bg, 0.5), RooFit::FillColor(kGreen+1), RooFit::FillStyle(3001));
   bg.plotOn(data_plot, RooFit::LineColor(kBlack));
   pred.plotOn(data_plot, RooFit::LineColor(kBlack), RooFit::MarkerColor(kBlack));
 
@@ -160,7 +161,7 @@ void BackgroundPrediction_Kinematic_CrystalBall(std::string filename,
   tPrel->SetTextColor(kBlack);
   tPrel->SetTextSize(0.04);
 
-  TLegend *leg = new TLegend(0.85625,0.7721654,0.6765625,0.8903839,NULL,"brNDC");
+  TLegend *leg = new TLegend(0.85625,0.721654,0.6165625,0.8903839,NULL,"brNDC");
   leg->SetBorderSize(0);
   leg->SetTextSize(0.035);
   leg->SetLineColor(1);
@@ -169,8 +170,13 @@ void BackgroundPrediction_Kinematic_CrystalBall(std::string filename,
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
   h_mX_SR->SetMarkerStyle(20);
-  if (hist.substr(0,7)=="h_mX_SB") leg->AddEntry(h_mX_SR, "Data in SB", "lep");
-   else leg->AddEntry(h_mX_SR, "Data in SR", "lep"); 
+  if (hist.substr(0,7)=="h_mX_SB") leg->AddEntry(h_mX_SR, "Data in SB", "ep");
+   else leg->AddEntry(h_mX_SR, "Data in SR", "ep"); 
+   TH1F * temp = new TH1F("temp", "temp", 100, 0,1); temp->SetLineWidth(2);  temp->SetLineColor(kBlack);
+  leg->AddEntry(temp, "CrystalBall fit", "l");
+  TH1F * temp1 = new TH1F("temp1", "temp1", 100, 0,1); temp1->SetLineWidth(2);
+  temp1->SetLineColor(kBlue+1);
+  leg->AddEntry(temp1, "GaussExp fit", "l");
   leg->Draw();
 
   CMS_lumi( p_1, iPeriod, iPos );
@@ -224,16 +230,23 @@ void BackgroundPrediction_Kinematic_CrystalBall(std::string filename,
   h_mX_SR_fakeData->Scale(nEventsSR/h_mX_SR_fakeData->GetSumOfWeights());
   RooDataHist data_obs("data_obs", "Data", RooArgList(*x), h_mX_SR_fakeData);
   
+  std::cout<<" COUNTING = "<<h_mX_SR_fakeData->Integral(h_mX_SR_fakeData->FindBin(fit_lo),h_mX_SR_fakeData->FindBin(fit_hi))<<std::endl;
+  std::cout<<" COUNTING = "<<data_obs.sumEntries()<<std::endl;
+  
   w_background->import(data_obs);
   w_background->SaveAs("w_background_Crystal.root");
+  
+  RooWorkspace *w_data=new RooWorkspace("HbbHbb");
+  w_data->import(data_obs);
+  w_data->SaveAs("w_data.root");
 
   // For the datacard
   std::cout<<" === RooFit data fit result to be entered in datacard === "<<std::endl;
   std::cout<<" Background number of events = "<<nEventsSR<<std::endl;
-  std::cout<<"crystalball_mean param "<<bg_p2.getVal()<<" "<<bg_p2.getError()<<std::endl;
-  std::cout<<"crystalball_width param "<<bg_p3.getVal()<<" "<<bg_p3.getError()<<std::endl;
-  std::cout<<"crystalball_switch param "<<bg_p0.getVal()<<" "<<bg_p0.getError()<<std::endl;
-  std::cout<<"crystalball_exponent param "<<bg_p1.getVal()<<" "<<bg_p1.getError()<<std::endl;
+  std::cout<<"bg_p2 param "<<bg_p2.getVal()<<" "<<bg_p2.getError()<<std::endl;
+  std::cout<<"bg_p3 param "<<bg_p3.getVal()<<" "<<bg_p3.getError()<<std::endl;
+  std::cout<<"bg_p0 param "<<bg_p0.getVal()<<" "<<bg_p0.getError()<<std::endl;
+  std::cout<<"bg_p1 param "<<bg_p1.getVal()<<" "<<bg_p1.getError()<<std::endl;
 
 }
 
