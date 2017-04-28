@@ -55,7 +55,8 @@ void BackgroundPrediction_Kinematic_CrystalBall(std::string filename,
   TH1F *h_mX_SR=(TH1F*)f_data->Get(hist.c_str());
   h_mX_SR->Rebin(rebin);
   TH1F *h_tmp=(TH1F*)f_data->Get("h_mX_SR_kinFit");	
-  double nEventsSR= h_tmp->Integral(h_tmp->FindBin(fit_lo),h_tmp->FindBin(fit_hi));
+  //double nEventsSR= h_tmp->Integral(h_tmp->FindBin(fit_lo),h_tmp->FindBin(fit_hi));
+  double nEventsSR= h_tmp->Integral();
   
   RooRealVar *x;
   x=new RooRealVar("x", "m_{X} (GeV)", plot_lo, plot_hi);
@@ -242,7 +243,8 @@ void BackgroundPrediction_Kinematic_CrystalBall(std::string filename,
 
   // For the datacard
   std::cout<<" === RooFit data fit result to be entered in datacard === "<<std::endl;
-  std::cout<<" Background number of events = "<<nEventsSR<<std::endl;
+  //std::cout<<" Background number of events = "<<nEventsSR<<std::endl;
+  std::cout<<" Background number of events = "<<h_mX_SR_fakeData->Integral(h_mX_SR_fakeData->FindBin(fit_lo),h_mX_SR_fakeData->FindBin(fit_hi))<<std::endl;
   std::cout<<"bg_p2 param "<<bg_p2.getVal()<<" "<<bg_p2.getError()<<std::endl;
   std::cout<<"bg_p3 param "<<bg_p3.getVal()<<" "<<bg_p3.getError()<<std::endl;
   std::cout<<"bg_p0 param "<<bg_p0.getVal()<<" "<<bg_p0.getError()<<std::endl;
